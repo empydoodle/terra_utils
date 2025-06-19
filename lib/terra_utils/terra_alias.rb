@@ -19,7 +19,7 @@ module TerraUtils
 
     def parse_alias_config
       # Specifically don't convert to symbols here
-      @alias_config = JSON.parse(File.read(alias_config_file))
+      @alias_config = parse_json_file(alias_config_file, symbols: false)
     rescue JSON::ParserError => e
       raise ConfigError, "Failed to parse alias config: #{alias_config_file}. Error: #{e.message}"
     end

@@ -27,7 +27,7 @@
           "enabled": true,
           "command": "saml2aws login"
         },
-        "environment_variable_autofill": {
+        "environment_variable_auto_fill": {
           "enabled": true,
           "config_file": "/home/USER/.config/terra_utils/env_auto_fill.json"
         }
@@ -41,7 +41,7 @@
         "module"
       ],
       "features": {
-        "environment_variable_autofill": {
+        "environment_variable_auto_fill": {
           "enabled": true,
           "config": "/home/USER/.config/terra_utils/project_x_env_auto_fill.json"
         }
@@ -53,7 +53,7 @@
         "terragrunt": "0.53.2"
       },
       "features": {
-        "environment_variable_autofill": {
+        "environment_variable_auto_fill": {
           "enabled": false
         }
       }

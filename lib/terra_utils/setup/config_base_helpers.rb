@@ -63,26 +63,26 @@ module TerraUtils
         }
       end
 
-      def fetch_project_options_from_project_dir(project_dir)
+      def fetch_project_options_from_project_dir(project_dir, basenames: true)
         paths = Dir.glob(File.join(project_dir, '*')).select do |dir|
           File.directory?(dir) && Dir.entries(dir).include?('.git')
         end
-        paths.reject do |path|
+        paths.reject! do |path|
           [
             Dir.glob(File.join(path, '**', '*.hcl')),
             Dir.glob(File.join(path, '**', '*.tf'))
           ].flatten.empty?
         end
+        basenames ? paths.map { |path| File.basename(path) } : paths
       end
 
       def select_projects_from_project_dir(project_dir, ind: 2)
         return [] unless project_dir.is_a?(String) && !project_dir.empty? && Dir.exist?(project_dir)
 
-        paths = fetch_project_options_from_project_dir(project_dir)
-        return [] if paths.empty?
+        projects = fetch_project_options_from_project_dir(project_dir)
+        return [] if projects.empty?
 
-        projects = paths.map { |path| File.basename(path) }
-        args     = { ref: "parent directory #{project_dir} child project", default: projects, with_custom: true }
+        args = { ref: "parent directory #{project_dir} child project", default: projects, with_custom: true }
         user_config_options(**args, ind: ind)
       end
 

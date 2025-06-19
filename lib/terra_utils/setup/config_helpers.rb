@@ -16,13 +16,13 @@ module TerraUtils
         ask_(prompt, ind, **args)
       end
 
-      def resolve_option_select(selections_arr, options_arr, with_custom: true, ind: 3, **args)
-        return [] if selections_arr.empty? || selections_arr.inspect.match?(/\["[xX]"\]/)
+      def resolve_option_select(selections, options, with_custom: true, ind: 3, **args)
+        return [] if selections.empty? || selections.inspect.match?(/\["[xX]"\]/)
 
-        selections_arr.map do |s|
+        selections.flatten.map do |s|
           selection = s.to_i
-          next options_arr.fetch(selection) unless selection >= options_arr.size
-          raise IndexError.new, "Please select from valid options (-1..#{options_arr.size - 1})" unless with_custom
+          next options.fetch(selection) unless selection >= options.size
+          raise ArgumentError.new, "Please select from valid options (-1..#{options.size - 1})" unless with_custom
 
           user_option_prompt(**args.merge({ prompt_ref: 'custom', prompt_eg: selection, escape: true, ind: ind }))
         end.compact
@@ -38,20 +38,23 @@ module TerraUtils
         }
       end
 
-      def user_option_selections(options, with_custom: true, ind: 2)
+      def user_option_selections(options, with_custom: true, single: false, ind: 2)
         range      = with_custom ? options.size : options.size - 1
         prompt     = [0, range].compact.uniq.join('-')
-        ask_("(#{prompt})", ind).split
+        response   = ask_(["(#{prompt})", ('[limit: 1]' if single)].compact.join(' '), ind).split
+        raise RangeError.new, 'Too many options selected! (limit: 1))' if single && response.size > 1
+
+        response
       end
 
-      def select_from_options(options, with_custom: true, ind: 2, **args)
+      def select_from_options(options, with_custom: true, single: false, ind: 2, **args)
         return [] unless options.is_a?(Array) && !options.empty? || with_custom
 
         say_('Please select the options you want to use in a space-separated string (e.g. "0 1 2"):', ind, :bold)
         table_(**prepare_options_table(options, with_custom: with_custom), indent: ind + 1)
-        selections = user_option_selections(options, with_custom: with_custom, ind: ind)
+        selections = user_option_selections(options, with_custom: with_custom, single: single, ind: ind)
         resolve_option_select(selections, options, with_custom: with_custom, ind: ind, **args)
-      rescue IndexError => e
+      rescue ArgumentError, RangeError => e
         error_(e.message, ind)
         retry
       end
@@ -69,11 +72,11 @@ module TerraUtils
 
       def user_config_options(ref:, selected: [], default: [], with_custom: true, ind: 2, **args)
         say_("Setting up #{ref} options...", ind)
-        config = if default && !default.empty?
+        config = if default.empty?
+                   user_option_prompt(prompt_ref: ref, ind: ind, **args)
+                 else
                    options = default.dup.reject { |o| selected.include?(o) }
                    select_from_options(options, with_custom: with_custom, ind: ind, **args)
-                 else
-                   user_option_prompt(prompt_ref: ref, ind: ind, **args)
                  end
         selected = [selected, config].flatten.uniq
         return selected unless prompt_additional_configs(ref: ref, selected_options: selected, ind: ind)

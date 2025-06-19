@@ -32,17 +32,25 @@ module TerraUtils
         path
       end
 
-      def setup_config_file(name:, file:, method:, ind: 1)
-        path = File.join(@config_dir, file)
+      def use_config_template?(config_name, force_template: false, ind: 1)
+        return true if force_template
+
+        say_('INFO: "No" response will copy a config template instead', ind, :yellow, leading_br: true)
+        no_?("Use config wizard to populate #{config_name} config?", ind)
+      end
+
+      def setup_config_file(name:, file:, method:, ind: 1, **options)
+        dir  = File.dirname(file) == '.' ? @config_dir : File.dirname(file)
+        path = File.join(dir, File.basename(file))
         say_("Checking for #{name} config (#{path})...", ind)
         return path if check_existing_config(path, ind: ind + 1)
 
-        empty_directory(@config_dir) unless Dir.exist?(@config_dir)
-        say_('INFO: "No" response will copy a config template instead', ind, :yellow, leading_br: true)
-        use_config_template = no_?("Use config wizard to populate #{name} config?", ind)
-        return copy_config_template(file: file, path: path, ind: ind) if use_config_template
+        empty_directory(dir) unless Dir.exist?(dir)
+        if use_config_template?(name, force_template: options.delete(:force_config_template), ind: ind)
+          return copy_config_template(file: file, path: path, ind: ind)
+        end
 
-        create_file(path, JSON.pretty_generate(public_send(method.to_sym, ind: ind)))
+        create_file(path, JSON.pretty_generate(public_send(method.to_sym, ind: ind, **options)))
       end
 
       def setup_base_config_file(ind: 1)

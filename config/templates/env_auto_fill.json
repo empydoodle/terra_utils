@@ -1,5 +1,5 @@
 {
-  "valid_terragrunt_commands": [
+  "valid_commands": [
     "plan",
     "apply",
     "destroy",
@@ -10,8 +10,8 @@
       "environment_variables": [
         "PROVIDER_X_API_KEY"
       ],
-      "service_instance_config": {
-        "glob": {
+      "value_config": {
+        "global": {
           "ref": "op://API Keys/Provider X/credential",
           "format": "TXT"
         }
@@ -22,8 +22,8 @@
         "PROVIDER_Y_ACCOUNT_ID"
       ],
       "config_scope": "client",
-      "service_instance_config": {
-        "glob": null,
+      "value_config": {
+        "global": null,
         "client1": {
           "ref": "/home/USER/clients/client1/provider_y_account_ids.json",
           "format": "JSON",
@@ -58,8 +58,8 @@
         "PROVIDER_Z_USER_TOKEN"
       ],
       "config_scope": "env",
-      "service_instance_config": {
-        "glob": {
+      "value_config": {
+        "global": {
           "ref": "/home/USER/.config/provider_z/config_test_stag.json",
           "format": "JSON",
           "key": "api_tokens",
@@ -80,8 +80,8 @@
       "environment_variables": [
         "USER"
       ],
-      "service_instance_config": {
-        "glob": {
+      "value_config": {
+        "global": {
           "ref": "user_name",
           "format": "String"
         }

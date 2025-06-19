@@ -10,38 +10,38 @@ require_relative '../terra_utils'
 module TerraUtils
   # Methods for extracting and collating API key env vars
   module EnvAutoFill
-    def env_autofill_project_config
-      project_features_config.fetch(:environment_variable_autofill)
+    def env_auto_fill_project_config
+      project_features_config.fetch(:environment_variable_auto_fill)
     rescue KeyError => e
-      err = "Unable to fetch Environment Variable Autofill feature config from project config! Error: #{e.message}"
+      err = "Unable to fetch Environment Variable Auto-Fill feature config from project config! Error: #{e.message}"
       raise ConfigError, err
     end
 
-    def env_autofill_config_file
-      @env_autofill_config_path || env_autofill_project_config.fetch(:config_file)
+    def env_auto_fill_config_file
+      @env_auto_fill_config_path || env_auto_fill_project_config.fetch(:config_file)
     end
 
-    def parse_env_autofill_config
+    def parse_env_auto_fill_config
       # Specifically don't convert to symbols here
       enable_onepass_if_installed
-      @env_autofill_config = parse_json_file(env_autofill_config_file)
+      @env_auto_fill_config = parse_json_file(env_auto_fill_config_file)
     rescue JSON::ParserError => e
-      raise ConfigError, "Failed to parse env_autofill config: #{env_autofill_config_file}. Error: #{e.message}"
+      raise ConfigError, "Failed to parse env_auto_fill config: #{env_auto_fill_config_file}. Error: #{e.message}"
     end
 
-    def autofill_env?
+    def auto_fill_env?
       [ # Only use for accepted terragrunt commands
-        @env_autofill_config.fetch(:valid_terragrunt_commands).any? { |cmd| @terra_subcmd == cmd }
+        @env_auto_fill_config.fetch(:valid_commands).any? { |cmd| @terra_subcmd == cmd }
       ].flatten.uniq == [true]
     end
 
     def generate_env_vars
-      @env_autofill_config.fetch(:variables_config).map do |cfg|
+      @env_auto_fill_config.fetch(:variables_config).map do |cfg|
         log_debug("Fetching environment variables: #{cfg.fetch(:environment_variables)}") if @debug
-        scope  = @scope.fetch(cfg.fetch(:config_scope, nil), :glob).to_sym
-        config = select_service_config(cfg.fetch(:service_instance_config), scope)
+        scope  = @scope.fetch(cfg.fetch(:config_scope, nil), :global).to_sym
+        config = select_value_config(cfg.fetch(:value_config), scope)
         cfg.fetch(:environment_variables).flat_map do |var|
-          [var, fetch_service_config(**config)].join('=')
+          [var, fetch_value_config(**config)].join('=')
         end
       end.join(' ')
     end
@@ -62,8 +62,8 @@ module TerraUtils
       path.start_with?('op://')
     end
 
-    def select_service_config(config_path_opts, scope)
-      config_path_opts.fetch(scope, nil) || config_path_opts.fetch(:glob)
+    def select_value_config(config_path_opts, scope)
+      config_path_opts.fetch(scope, nil) || config_path_opts.fetch(:global)
     end
 
     def read_config_ref(config_ref)
@@ -93,14 +93,14 @@ module TerraUtils
       config_subs.is_a?(Array) && !config_subs.empty?
     end
 
-    def fetch_subdivision_config(service_config, subs)
-      service_config.dig(*subs.map { |div| @scope.fetch(div, nil) }.compact)
+    def fetch_subdivision_config(value_config, subs)
+      value_config.dig(*subs.map { |div| @scope.fetch(div, nil) }.compact)
     rescue NoMethodError => e
-      err = "No value configured for #{subs.inspect} against service config:\n#{service_config.inspect}\nError: #{e}"
+      err = "No value configured for #{subs.inspect} against value config:\n#{value_config.inspect}\nError: #{e}"
       raise ConfigError, err
     end
 
-    def fetch_service_config(ref:, format:, config_subdivisions: nil, key: nil)
+    def fetch_value_config(ref:, format:, config_subdivisions: nil, key: nil)
       config = parse_config_ref(ref: ref, format: format)
       config = config.fetch(key) if key && %i[json yaml].include?(format.downcase.to_sym)
       return config unless valid_config_subdivisions?(config_subdivisions)

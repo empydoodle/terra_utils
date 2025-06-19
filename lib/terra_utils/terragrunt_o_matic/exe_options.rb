@@ -19,8 +19,8 @@ module TerraUtils
         state_backend_auto_auth: nil,
         backend_auto_auth_cmd: nil,
         config_path: nil,
-        environment_variable_autofill: nil,
-        env_autofill_config_path: nil,
+        environment_variable_auto_fill: nil,
+        env_auto_fill_config_path: nil,
         addit_projects_dir: nil,
         debug: false
       }.freeze
@@ -141,23 +141,23 @@ module TerraUtils
 
       def env_auto_fill_parameters
         @optparse.on(
-          '-E', '--[no-]env-autofill[-config=CONFIG_FILE_PATH]',
-          'Use different environment variable autofill settings (see usage examples).'
+          '-E', '--[no-]env-auto-fill[-config=CONFIG_FILE_PATH]',
+          'Use different environment variable auto-fill settings (see usage examples).'
         ) do |path|
           if path.is_a?(String)
-            @options[:environment_variable_autofill] = true
-            @options[:env_autofill_config_path] = path.strip
+            @options[:environment_variable_auto_fill] = true
+            @options[:env_auto_fill_config_path] = path.strip
           else
-            @options[:environment_variable_autofill] = false
+            @options[:environment_variable_auto_fill] = false
           end
         end
         @examples << {
-          desc: 'Plan without autofilling environment variables (if enabled in config)',
-          usage: ['tg --no-env-autofill p', 'tg -E p']
+          desc: 'Plan without auto-filling environment variables (if enabled in config)',
+          usage: ['tg --no-env-auto-fill p', 'tg -E p']
         }
         @examples << {
-          desc: 'Use alternative config for environment variable autofilling during apply',
-          usage: ['tg --env-autofill-config=/path/to/env_auto_fill.json apply', 'tg -E/path/to/config.json a']
+          desc: 'Use alternative config for environment variable auto-filling during apply',
+          usage: ['tg --env-auto-fill-config=/path/to/env_auto_fill.json apply', 'tg -E/path/to/config.json a']
         }
       end
 
@@ -253,7 +253,7 @@ module TerraUtils
             Features can be enabled or disabled in config (default file:~/.config/terra_utils.json)
             - Terraform / Terragrunt command aliases
             - Automatic Terraform state backend provider authentication
-            - Autofilling environment variables for provider config (e.g. monitoring / alerting providers)
+            - Auto-filling environment variables for provider config (e.g. monitoring / alerting providers)
 
           USAGE
             tg [options] "[terragrunt command]"

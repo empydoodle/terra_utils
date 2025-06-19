@@ -33,6 +33,15 @@ module TerraUtils
         say_(message_parts, *[indent, style].flatten.compact, new_line: true, **options)
       end
 
+      def info_(message_parts, *style, **options)
+        style.compact!
+        indent = style.shift if style.first.is_a?(Integer)
+        style.unshift(%i[black on_cyan]).flatten!                      # DEFAULT: black on cyan
+        options[:block]      = true if options.fetch(:block, nil).nil? # DEFAULT: style block (accept false)
+        options[:margin]   ||= 1                                       # DEFAULT: margin: 1
+        say_(message_parts, *[indent, style].flatten.compact, new_line: true, **options)
+      end
+
       def ask_(prompt, *style, escape: false, **options)
         if escape
           escape = 'X' unless escape.is_a?(String)
@@ -93,16 +102,18 @@ module TerraUtils
 
         empty_line(margin, block_length, style) if options.fetch(:tall, false)
         msg_array.each_with_index do |msg, i|
-          str    = format_message(msg, margin, block_length, i.zero? || options.fetch(:center, false))
+          center = (i.zero? && options.fetch(:title, false)) || options.fetch(:center, false)
+          str    = format_message(msg, margin, block_length, center)
           public_send(method, str, style, options.fetch(:new_line, true)) # DEFAULT: Line break after string
         end
         empty_line(margin, block_length, style) if options.fetch(:tall, false)
       end
 
       def default_header_options(options)
-        options[:leading_br] = true if options[:leading_br].nil? # DEFAULT: leading line break (accept false)
-        options[:block]      = true if options[:block].nil?      # DEFAULT: style block (accept false)
-        options[:margin]   ||= 1                                 # DEFAULT: margin: 1
+        options[:leading_br] = true if options.fetch(:leading_br, nil).nil? # DEFAULT: leading line break (accept false)
+        options[:block]      = true if options.fetch(:block, nil).nil?      # DEFAULT: style block (accept false)
+        options[:margin]   ||= 1                                            # DEFAULT: margin: 1
+        options[:title]      = true if options.fetch(:title, nil).nil?      # DEFAULT: Center top line
         options
       end
 

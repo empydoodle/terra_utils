@@ -11,7 +11,7 @@ module TerraUtils
     attr_accessor :projects_dir, :project_config, :terra_cmd, :terra_subcmd,
                   :debug, :exe_cmd, :config, :upgrade_providers, :enforce_version,
                   :state_backend_auto_auth, :backend_auto_auth_cmd,
-                  :environment_variable_autofill, :env_autofill_config_path
+                  :environment_variable_auto_fill, :env_auto_fill_config_path
     attr_reader   :options, :args, :projects_dirs, :addit_projects_dir, :path, :project, :scope
 
     def initialize(options, argv_array)
@@ -31,6 +31,7 @@ module TerraUtils
 
       [
         ('TF_LOG=debug' if @debug),
+        extract_tf_vars_from_env,
         collate_env_vars,
         @terra_cmd,
         @terra_subcmd,
@@ -95,6 +96,10 @@ module TerraUtils
       ].include?(true)
     end
 
+    def extract_tf_vars_from_env
+      ENV.select { |key, _| key.start_with?('TF_VAR') }.to_a.map { |env| env.join('=') }.join(' ')
+    end
+
     def parse_subcmd_alias(raw_subcmd)
       return raw_subcmd unless feature_enabled?('TerraAlias') && !skip_cmd?
 
@@ -102,7 +107,7 @@ module TerraUtils
     end
 
     def collate_env_vars
-      return nil unless feature_enabled?('EnvAutoFill') && autofill_env?
+      return nil unless feature_enabled?('EnvAutoFill') && auto_fill_env?
 
       generate_env_vars
     end

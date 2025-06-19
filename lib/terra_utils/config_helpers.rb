@@ -1,12 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Helper methods for configuration management
-
-require_relative '../terra_utils'
-
 module TerraUtils
-  # Module for configuration management
+  # Helper methods for configuration management
   module ConfigHelpers
 
     def parse_config(config_file = nil)
@@ -74,7 +70,7 @@ module TerraUtils
       enabled = list_enabled_features
       enable_aliases if enabled.include?(:command_aliases)
       enable_backend_auto_auth if enabled.include?(:state_backend_auto_auth)
-      enable_env_autofill if enabled.include?(:environment_variable_autofill)
+      enable_env_auto_fill if enabled.include?(:environment_variable_auto_fill)
     end
   end
 end

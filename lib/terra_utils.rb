@@ -24,8 +24,8 @@ module TerraUtils
     system('terraform --version')
   end
 
-  def parse_json_file(file_path)
-    JSON.parse(File.read(file_path), symbolize_names: true)
+  def parse_json_file(file_path, symbols: true)
+    JSON.parse(File.read(file_path), symbolize_names: symbols)
   rescue JSON::ParserError => e
     raise ConfigError, "Failed to parse JSON file: #{file_path}. Error: #{e.message}"
   end
@@ -50,10 +50,10 @@ module TerraUtils
     true
   end
 
-  def enable_env_autofill
+  def enable_env_auto_fill
     require_relative 'terra_utils/env_auto_fill'
     extend EnvAutoFill
-    parse_env_autofill_config
+    parse_env_auto_fill_config
     true
   end
 
