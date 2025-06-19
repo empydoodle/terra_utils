@@ -1,0 +1,8 @@
+brew "rbenv"
+brew "tfswitch"
+brew "tgswitch"
+brew "tflint"
+brew "tfsec"
+brew "terraform-docs"
+brew "pre-commit"
+brew "1password-cli"

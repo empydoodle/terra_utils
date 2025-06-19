@@ -1,0 +1,62 @@
+{
+  "terraform_provider_platforms": [
+    "linux_amd64",
+    "darwin_amd64",
+    "darwin_arm64"
+  ],
+  "projects_dirs": [
+    "/home/USER/projects",
+    "/Users/USER/projects"
+  ],
+  "projects_settings": {
+    "global": {
+      "directory_structure": [
+        "env",
+        "module"
+      ],
+      "versions": {
+        "terraform": "1.12.1",
+        "terragrunt": "0.84.4"
+      },
+      "features": {
+        "command_aliases": {
+          "enabled": true,
+          "config_file": "/home/USER/.config/terra_utils/terra_aliases.json"
+        },
+        "state_backend_auto_auth": {
+          "enabled": true,
+          "command": "saml2aws login"
+        },
+        "environment_variable_autofill": {
+          "enabled": true,
+          "config_file": "/home/USER/.config/terra_utils/env_auto_fill.json"
+        }
+      }
+    },
+    "namespaced_project_X": {
+      "directory_structure": [
+        "client",
+        "env",
+        "namespace",
+        "module"
+      ],
+      "features": {
+        "environment_variable_autofill": {
+          "enabled": true,
+          "config": "/home/USER/.config/terra_utils/project_x_env_auto_fill.json"
+        }
+      }
+    },
+    "namespaced_legacy_project_Y": {
+      "versions": {
+        "terraform": "1.7.0",
+        "terragrunt": "0.53.2"
+      },
+      "features": {
+        "environment_variable_autofill": {
+          "enabled": false
+        }
+      }
+    }
+  }
+}

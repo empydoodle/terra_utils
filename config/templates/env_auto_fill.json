@@ -1,0 +1,91 @@
+{
+  "valid_terragrunt_commands": [
+    "plan",
+    "apply",
+    "destroy",
+    "import"
+  ],
+  "variables_config": [
+    {
+      "environment_variables": [
+        "PROVIDER_X_API_KEY"
+      ],
+      "service_instance_config": {
+        "glob": {
+          "ref": "op://API Keys/Provider X/credential",
+          "format": "TXT"
+        }
+      }
+    },
+    {
+      "environment_variables": [
+        "PROVIDER_Y_ACCOUNT_ID"
+      ],
+      "config_scope": "client",
+      "service_instance_config": {
+        "glob": null,
+        "client1": {
+          "ref": "/home/USER/clients/client1/provider_y_account_ids.json",
+          "format": "JSON",
+          "key": "sub_accounts",
+          "config_subdivisions": [
+            "env",
+            "namespace"
+          ]
+        },
+        "client2": {
+          "ref": "/home/USER/clients/client2/provider_y/account_ids.yml",
+          "format": "YAML",
+          "key": null,
+          "config_subdivisions": [
+            "env",
+            "namespace"
+          ]
+        },
+        "client3": {
+          "ref": "op://Client 3/Provider Y/account_ids",
+          "format": "JSON",
+          "key": null,
+          "config_subdivisions": [
+            "env"
+          ]
+        }
+      }
+    },
+    {
+      "environment_variables": [
+        "PROVIDER_Z_TOKEN",
+        "PROVIDER_Z_USER_TOKEN"
+      ],
+      "config_scope": "env",
+      "service_instance_config": {
+        "glob": {
+          "ref": "/home/USER/.config/provider_z/config_test_stag.json",
+          "format": "JSON",
+          "key": "api_tokens",
+          "config_subdivisions": [
+            "env"
+          ]
+        },
+        "prod": {
+          "ref": "op://Private/Provider Z/api/credential",
+          "format": "TXT",
+          "key": null
+        },
+        "stag": null,
+        "test": null
+      }
+    },
+    {
+      "environment_variables": [
+        "USER"
+      ],
+      "service_instance_config": {
+        "glob": {
+          "ref": "user_name",
+          "format": "String"
+        }
+      }
+    }
+  ]
+}

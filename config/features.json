@@ -1,0 +1,26 @@
+[
+  {
+    "name": "command_aliases",
+    "nice_name": "Terra Alias",
+    "description": "Configurable command aliases for Terraform and Terragrunt.",
+    "config": {
+      "config_file": "terra_aliases.json"
+    }
+  },
+  {
+    "name": "state_backend_auto_auth",
+    "nice_name": "Terraform State Backend Auto Authenticator",
+    "description": "Automatically authenticate with you configured Terraform state backend provider whenever you run a command.",
+    "config": {
+      "command": "saml2aws login"
+    }
+  },
+  {
+    "name": "environment_variable_autofill",
+    "nice_name": "Environment Variable Autofill",
+    "description": "Automatically fill provider environment variables from a configuration file.",
+    "config": {
+      "config_file": "env_auto_fill.json"
+    }
+  }
+]
