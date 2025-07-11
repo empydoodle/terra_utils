@@ -1,0 +1,65 @@
+[
+  {
+    "name": "command_aliases",
+    "nice_name": "feature: Terra Alias",
+    "description": "Configurable command aliases for Terraform / OpenTofu and Terragrunt.",
+    "type": "Hash",
+    "config": {
+      "config_file": "terra_aliases.json",
+      "config_template": "terra_aliases.json",
+      "force_config_template": true
+    },
+    "setup": {
+      "require": null,
+      "lib": null,
+      "method": null
+    }
+  },
+  {
+    "name": "version_enforcement",
+    "nice_name": "feature: Terra Package Version Enforcement",
+    "description": "Auomatically switch your Terra* / OpenTofu version to the one configured for your project whenever you run a command.",
+    "type": "Hash",
+    "config": {
+      "config_file": "terra_versions.json",
+      "config_template": "terra_versions.json",
+      "force_config_template": false
+    },
+    "setup": {
+      "require": "config_features_helpers/terra_versions.rb",
+      "lib": "ConfigFeaturesHelpers::TerraVersions",
+      "method": "generate_terra_versions"
+    }
+  },
+  {
+    "name": "state_backend_auto_auth",
+    "nice_name": "feature: Terra State Backend Auto Authenticator",
+    "description": "Automatically authenticate with you configured Terraform / OpenTofu state backend provider whenever you run a command.",
+    "type": "Hash",
+    "config": {
+      "command": "saml2aws login",
+      "force_config_template": false
+    },
+    "setup": {
+      "require": null,
+      "lib": null,
+      "method": null
+    }
+  },
+  {
+    "name": "environment_variable_auto_fill",
+    "nice_name": "feature: Environment Variable Auto-Fill",
+    "description": "Automatically fill provider environment variables from a configuration file.",
+    "type": "Hash",
+    "config": {
+      "config_file": "env_auto_fill.json",
+      "config_template": "env_auto_fill.json",
+      "force_config_template": false
+    },
+    "setup": {
+      "require": "config_features_helpers/env_auto_fill.rb",
+      "lib": "ConfigFeaturesHelpers::EnvAutoFill",
+      "method": "generate_env_auto_fill"
+    }
+  }
+]

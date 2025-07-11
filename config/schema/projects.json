@@ -1,0 +1,38 @@
+[
+  {
+    "name": "iac_framework",
+    "nice_name": "Infrastructure-As-Code Framework",
+    "description": "Choose which framework your project uses.",
+    "type": "String",
+    "required": true
+  },
+  {
+    "name": "provider_platforms",
+    "nice_name": "Provider Lock Platforms",
+    "description": "Set the platforms for which provider binaries will be locked.",
+    "type": "Array",
+    "required": false
+  },
+  {
+    "name": "directory_structure",
+    "nice_name": "Project Directory Structure",
+    "description": "Set the scope of a project's directory levels to allow TerraUtils to work to its full potential.",
+    "type": "Array",
+    "required": false,
+    "info": [
+      "TerraUtils relies on context/scope of the directory structure of your projects to function at its best.",
+      "  i.e. the scope of directories inside your project until the main.tf or terragrunt.hcl files.",
+      "For example:",
+      "  - module/",
+      "  - environment/module/",
+      "  - region/client/environment/module/"
+    ]
+  },
+  {
+    "name": "features",
+    "nice_name": "Features",
+    "description": "Enable TerraUtils features for the target project.",
+    "type": "Hash",
+    "required": false
+  }
+]

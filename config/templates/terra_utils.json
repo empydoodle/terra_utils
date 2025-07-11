@@ -14,14 +14,14 @@
         "env",
         "module"
       ],
-      "versions": {
-        "terraform": "1.12.1",
-        "terragrunt": "0.84.4"
-      },
       "features": {
         "command_aliases": {
           "enabled": true,
           "config_file": "/home/USER/.config/terra_utils/terra_aliases.json"
+        },
+        "version_enforcement": {
+          "enabled": true,
+          "config_file": "/home/USER/.config/terra_utils/terra_versions.json"
         },
         "state_backend_auto_auth": {
           "enabled": true,
@@ -48,11 +48,11 @@
       }
     },
     "namespaced_legacy_project_Y": {
-      "versions": {
-        "terraform": "1.7.0",
-        "terragrunt": "0.53.2"
-      },
       "features": {
+        "version_enforcement": {
+          "enabled": true,
+          "config_file": "/home/USER/.config/terra_utils/project_y_terra_versions.json"
+        },
         "environment_variable_auto_fill": {
           "enabled": false
         }

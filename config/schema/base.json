@@ -1,0 +1,16 @@
+[
+  {
+    "name": "projects_dirs",
+    "nice_name": "Project Parent Directories",
+    "description": "Set the standard directories in which you store your Terra* projects.",
+    "type": "Array",
+    "required": true
+  },
+  {
+    "name": "projects_settings",
+    "nice_name": "Projects Settings",
+    "description": null,
+    "type": "Hash",
+    "required": true
+  }
+]

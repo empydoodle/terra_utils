@@ -9,15 +9,6 @@ module TerraUtils
   module GruntHelpers
     module_function
 
-    def switch_tg_version
-      version = @project_config.fetch(:terragrunt_version)
-      return unless version
-
-      system("tfswitch #{version}")
-    rescue KeyError
-      # If not configured, use system terraform
-    end
-
     def delete_tg_cache
       log('Deleting Terragrunt cache...')
       FileUtils.rm_rf(File.join(Dir.pwd, '.terragrunt-cache'))
@@ -67,7 +58,7 @@ module TerraUtils
     def upgrade_providers_and_lock
       [
         @terra_cmd,
-        generate_init_upgrade_cmd(use_local_module: @use_local_tf, local_projects_dirs: @projects_dirs),
+        generate_init_upgrade_cmd(use_local_module: @use_local_module, local_projects_dirs: @projects_dirs),
         '&&',
         @terra_cmd,
         generate_providers_lock_cmd

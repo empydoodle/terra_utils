@@ -1,0 +1,16 @@
+[
+  {
+    "name": "valid_commands",
+    "nice_name": "Valid Commands",
+    "description": "Set the Terra* / OpenTofu commands that will trigger environment variable auto-filling.",
+    "type": "Array",
+    "required": true
+  },
+  {
+    "name": "variables_config",
+    "nice_name": "Environment Variable Auto-Fill Config Instance",
+    "description": "Set up a new config instance for environment variable auto-fill.",
+    "type": "Array",
+    "required": true
+  }
+]

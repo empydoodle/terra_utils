@@ -1,0 +1,50 @@
+[
+  {
+    "name": "ref",
+    "nice_name": "Source Reference",
+    "description": "Specify the source (or direct string) of the environment variable value.",
+    "type": "String",
+    "required": true,
+    "info": [
+      "This can be a path to a local file or a 1Password path (e.g. op://vault/[section]/item).",
+      "Alternatively this can be the raw value of the target environment variable(s)."
+    ]
+  },
+  {
+    "name": "format",
+    "nice_name": "Source Format",
+    "description": "Specify the format of the source (e.g. JSON, YAML, TXT, String).",
+    "type": "String",
+    "required": true,
+    "info": [
+      "This reference supports any of the following options:",
+      "- JSON: associative array (Hash)",
+      "- YAML: associative array (Hash)",
+      "- TXT: any text file, including a 1Password entry containing the value",
+      "- String: (select if the Source Reference is the raw value of the target variable(s)"
+    ]
+  },
+  {
+    "name": "key",
+    "nice_name": "Source Config Lookup Key",
+    "description": "Configure key to start looking for the variable value (if format is JSON / YAML).",
+    "type": "String",
+    "required": false,
+    "info": [
+      "TerraUtils needs the key that holds the value for the environment variable (e.g. {api_key: {VALUE}}).",
+      "If the value is in a nested Hash, the subdivisions based on directory structure scope can be specified in the next step",
+      "  - A 'nil' value can be used for this key if said subdivision(s) start from the root of the entry (e.g. {env: {VALUE}})"
+    ]
+  },
+  {
+    "name": "config_subdivisions",
+    "nice_name": "Source Config Lookup Subdivisions",
+    "description": "Select the subdivisions of the config based on the project directory scope.",
+    "type": "Array",
+    "required": false,
+    "info": [
+      "If the environment variable value is nested inside the value source config, TerraUtils can retrieve it as long as the parent",
+      "elements follow a naming convention that can be resolved with the configured directory structure."
+    ]
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "name": "environment_variables",
+    "nice_name": "Target Environment Variable(s)",
+    "description": "Set the environment variable(s) to auto-fill with this config instance.",
+    "type": "Array",
+    "required": true
+  },
+  {
+    "name": "config_scope",
+    "nice_name": "Config Scope",
+    "description": "Select the directory structure scope which decides the source of environment variables.",
+    "type": "String",
+    "required": true,
+    "info": [
+      "TerraUtils selects the source for environment variable values based on the chosen scope.",
+      "This scope identifier resolves to the value of the corresponding scope of the project directory structure.",
+      "Using a 'nil' scope is valid if the same variable needs to be applied regardless of scope."
+    ]
+  },
+  {
+    "name": "value_config",
+    "nice_name": "Value Configurations",
+    "description": "Configure the targets and value sources per chosen config_scope.",
+    "type": "Hash",
+    "required": true,
+    "info": [
+      "TerraUtils needs to know which values to target based on the selected config scope (or set a global scope if this is 'nil').",
+      "These values must align with the names of the directories in the scope of the project.",
+      "",
+      "For each of these targets, TerraUtils also needs to know where and how to extract the value of the environment variable(s).",
+      "This consists of the following configuration options:",
+      "  - A reference (a file / 1Password path or an explicit string).",
+      "  - The format of the reference target (e.g. JSON, YAML, TXT, String).",
+      "  - (If using YAML of JSON formats):",
+      "    - The key of the environment variable value.",
+      "    - If the config contains multiple variable values, the subdivisions of the config after the key",
+      "      (based on the project directory structure, e.g. { client: { env: value } })."
+    ]
+  }
+]

@@ -6,12 +6,17 @@ require 'json'
 require 'yaml'
 
 require_relative '../terra_utils'
+require_relative 'secrets_helpers'
 
 module TerraUtils
   # Methods for extracting and collating API key env vars
   module EnvAutoFill
+    extend SecretsHelpers
+
+    FEATURE_IDENT = :environment_variable_auto_fill
+
     def env_auto_fill_project_config
-      project_features_config.fetch(:environment_variable_auto_fill)
+      project_features_config.fetch(FEATURE_IDENT)
     rescue KeyError => e
       err = "Unable to fetch Environment Variable Auto-Fill feature config from project config! Error: #{e.message}"
       raise ConfigError, err
@@ -24,6 +29,7 @@ module TerraUtils
     def parse_env_auto_fill_config
       # Specifically don't convert to symbols here
       enable_onepass_if_installed
+      log_debug("Parsing feature config (#{FEATURE_IDENT}): #{env_auto_fill_config_file}")
       @env_auto_fill_config = parse_json_file(env_auto_fill_config_file)
     rescue JSON::ParserError => e
       raise ConfigError, "Failed to parse env_auto_fill config: #{env_auto_fill_config_file}. Error: #{e.message}"
@@ -48,29 +54,17 @@ module TerraUtils
 
     module_function
 
-    def enable_onepass_if_installed
-      @onepass_enabled = false
-      return false unless system('which op 1> /dev/null')
-
-      require_relative '../one_pass_hax'
-      extend OnePassHax
-      @onepass_enabled = true
-      true
-    end
-
-    def op_path?(path)
-      path.start_with?('op://')
-    end
-
     def select_value_config(config_path_opts, scope)
       config_path_opts.fetch(scope, nil) || config_path_opts.fetch(:global)
     end
 
     def read_config_ref(config_ref)
-      if op_path?(config_ref)
-        raise ConfigError, "Cannot load secret from #{op_path} - 1Password not installed" unless @onepass_enabled
+      if onepass_path?(config_ref)
+        raise ConfigError, "Cannot load secret from #{config_ref} - 1Password not installed" unless onepass_enabled?
 
         fetch_op_secret(config_ref)
+      elsif sops_enabled? && sops_encrypted?(config_ref)
+        read_sops(config_ref)
       else
         File.read(config_ref)
       end
@@ -81,7 +75,7 @@ module TerraUtils
       when :json
         JSON.parse(read_config_ref(ref))
       when :yaml
-        YAML.load(read_config_ref(ref))
+        YAML.safe_load(read_config_ref(ref))
       when :txt
         read_config_ref(ref).strip
       when :string

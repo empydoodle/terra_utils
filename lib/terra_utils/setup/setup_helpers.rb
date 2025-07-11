@@ -3,160 +3,114 @@
 
 module TerraUtils
   module Setup
-    ## General Thor helpers
+    # Helpers to populate config from user input
     module SetupHelpers
-      def say_(message_parts, *style, method: :say, **options)
-        style.compact!
-        indent = style.shift if style.first.is_a?(Integer)
-        %i[leading_br trailing_br].each { |opt| options[opt] = true } if style.delete(:parag)
-        options[:tall] = true if style.delete(:tall)
+      ESCAPE_STRING = '!X!'
 
-        msg_array = [message_parts].flatten
-        with_indent(indent, **options.slice(:leading_br, :trailing_br)) do
-          block_say(msg_array, method, style, options)
-        end
-      end
+      def user_config_options(ref:, selected: [], options: [], ind: 2, **args)
+        say_("Setting up #{ref} options...", ind)
+        valid_options = options.dup.reject { |o| selected.include?(o) }
+        selected = [selected, prompt_user(valid_options, ref: ref, ind: ind, **args)].flatten.compact.uniq
+        raise SetupError, 'Must specify at least 1 option!' if selected.empty? && !args.fetch(:allow_empty, false)
 
-      def error_(message_parts, *style, **options)
-        style.compact!
-        indent = style.shift if style.first.is_a?(Integer)
-        style  = %i[red bold] if style.empty?
-        say_(message_parts, indent, *style, method: :say_error, **options)
-      end
-
-      def header_(message_parts, *style, **options)
-        style.compact!
-        indent = style.shift if style.first.is_a?(Integer)
-        style.unshift(%i[black on_green]).flatten!               # DEFAULT: black on green
-        style.push(:bold).uniq! unless options[:bold] == false   # DEFAULT: bold (independent from other styling)
-        options = default_header_options(options)                # DEFAULT: leading line break, margin: 1, block
-        say_(message_parts, *[indent, style].flatten.compact, new_line: true, **options)
-      end
-
-      def info_(message_parts, *style, **options)
-        style.compact!
-        indent = style.shift if style.first.is_a?(Integer)
-        style.unshift(%i[black on_cyan]).flatten!                      # DEFAULT: black on cyan
-        options[:block]      = true if options.fetch(:block, nil).nil? # DEFAULT: style block (accept false)
-        options[:margin]   ||= 1                                       # DEFAULT: margin: 1
-        say_(message_parts, *[indent, style].flatten.compact, new_line: true, **options)
-      end
-
-      def ask_(prompt, *style, escape: false, **options)
-        if escape
-          escape = 'X' unless escape.is_a?(String)
-          prompt = "#{prompt} ['#{escape}' to escape]"
-        end
-        result = q_(:ask, "#{prompt}>", style, options)
-        result.downcase == escape.downcase ? nil : result
-      rescue NoMethodError
-        result
-      end
-
-      def no_?(prompt, *style, **options)
-        q_(:no?, "#{prompt} [y/n]> (y)", style, options)
-      end
-
-      def yes_?(prompt, *style, **options)
-        q_(:yes?, "#{prompt} [y/n]> (n)", style, options)
-      end
-
-      def table_(entries:, **options)
-        # axis determines direction of headers
-        say('') if options.fetch(:leading_br, true)
-        options[:indent] = options.fetch(:indent, 0) * 2
-        options[:axis] ||= :y                                      # DEFAULT: y axis
-        %i[headers_x headers_y].each { |opt| options[opt] ||= [] } # DEFAULT: empty headers
-        table_data = format_table_data(entries, **options.slice(*%i[axis headers_x headers_y]))
-        print_table(table_data, **options)
-        say('') if options.fetch(:trailing_br, true)
-      end
-
-      private
-
-      def with_indent(indent = nil, leading_br: nil, trailing_br: nil)
-        say('') if leading_br
-        shell.padding = indent || 0
-        yield
-        shell.padding = 0
-        say('') if trailing_br
-      end
-
-      def format_message(msg, margin, block_length, center = nil)
-        blength = [margin * 2, block_length].reduce(:+)
-        if center
-          msg.center(blength)
+        if prompt_additional_configs(ref: ref, selected_options: selected, ind: ind, **args)
+          user_config_options(ref: ref, selected: selected, options: options, is_retry: true, **args, ind: ind)
         else
-          [' ' * margin, msg.ljust(blength - margin)].join
+          args.fetch(:single, false) ? selected.first : selected
         end
+      rescue SetupError => e
+        error_("Not allowed: #{e.message}", ind)
+        retry
       end
 
-      def empty_line(margin, block_length, style)
-        str = format_message('', margin, block_length, true)
-        say(str, style, true)
+      def prompt_user(valid_options, is_retry: false, ind: 2, **args)
+        return select_from_options(valid_options, ind: ind, **args) unless valid_options.empty?
+
+        prompt_args = { prompt_ref: args.fetch(:ref, nil), with_escape: is_retry }
+        user_option_prompt(**args.merge(prompt_args), ind: ind)
       end
 
-      def block_say(msg_array, method, style, options)
-        block_length = options.fetch(:block, false) ? msg_array.map(&:to_s).max_by(&:length).length : 0
-        margin       = options.fetch(:margin, 0)
+      def select_from_options(options, ind: 2, **args)
+        return [] unless options.is_a?(Array) && !options.empty? || args.fetch(:with_custom, true)
 
-        empty_line(margin, block_length, style) if options.fetch(:tall, false)
-        msg_array.each_with_index do |msg, i|
-          center = (i.zero? && options.fetch(:title, false)) || options.fetch(:center, false)
-          str    = format_message(msg, margin, block_length, center)
-          public_send(method, str, style, options.fetch(:new_line, true)) # DEFAULT: Line break after string
-        end
-        empty_line(margin, block_length, style) if options.fetch(:tall, false)
+        say_(build_option_select_prompt(single: args.fetch(:single, false)), ind, :bold)
+        table_(**prepare_options_table(options, **args), indent: ind + 1)
+        selections = user_option_selections(options, **args, ind: ind)
+        resolve_option_select(selections, options, **args, ind: ind)
+      rescue SetupError => e
+        error_(e.message, ind)
+        retry
       end
 
-      def default_header_options(options)
-        options[:leading_br] = true if options.fetch(:leading_br, nil).nil? # DEFAULT: leading line break (accept false)
-        options[:block]      = true if options.fetch(:block, nil).nil?      # DEFAULT: style block (accept false)
-        options[:margin]   ||= 1                                            # DEFAULT: margin: 1
-        options[:title]      = true if options.fetch(:title, nil).nil?      # DEFAULT: Center top line
-        options
+      def build_option_select_prompt(single: false)
+        [
+          "Please select the corresponding number#{'(s)' unless single}",
+          "of the option#{'(s)' unless single}",
+          'you want to use',
+          ('in a space-separated string (e.g. "0 1 2")' unless single)
+        ].compact.join(' ') << ':'
       end
 
-      def ask_options(options)
-        %i[default limited_to echo path].map do |opt|
-          val = options.delete(opt)
-          next nil if val.nil?
+      def prepare_options_table(options, with_custom: true, allow_empty: false, with_escape: false, **_)
+        additional_options = [
+          (["#{options.size}+", 'Custom / Manual Entry [prompt user for option(s)]'] if with_custom),
+          ([ESCAPE_STRING, '[Exit option selection]'] if allow_empty || with_escape)
+        ].compact.to_h
 
-          [opt, val]
-        end.compact.to_h
+        {
+          headers_y: options.each_index.to_a.map(&:to_s).push(additional_options.keys).flatten.compact,
+          entries: [options.dup.push(additional_options.values).flatten.compact]
+        }
       end
 
-      def q_(method, prompt, style, options)
-        style.compact!
-        indent = style.shift if style.first.is_a?(Integer)
-        style.push(:bold).uniq! unless options.fetch(:bold, false) # bold by default
-        opts     = ask_options(options) if method == :ask
-        response = nil
-        with_indent(indent, **options.slice(:leading_br, :trailing_br)) do
-          args     = [method, prompt, style, opts].compact
-          response = public_send(*args)
-        end
+      def user_option_selections(options, with_custom: true, single: false, ind: 2, **_)
+        range      = with_custom ? options.size : options.size - 1
+        prompt     = [0, range].compact.uniq.join('-')
+        response   = ask_(["(#{prompt})", ('[limit: 1]' if single)].compact.join(' '), ind).split
+        raise SetupError, 'Too many options selected! (limit: 1))' if single && response.size > 1
+
         response
       end
 
-      def apply_table_headers(data, headers_x, headers_y, header_separator: nil)
-        return data if [headers_x, headers_y].flatten.empty? # return data if no headers
+      def resolve_option_select(selections, options, with_custom: true, ind: 3, **args)
+        return [] if selections.empty? || selections.first == ESCAPE_STRING
 
-        unless headers_x.empty?
-          data.unshift(headers_x)
-          header_separator = ' '
-        end
-        headers_y.empty? ? headers_y = nil : headers_y.unshift(header_separator).compact!
-        data.transpose.unshift(headers_y).compact.transpose
+        selections.flatten.map do |s|
+          options.fetch(s.to_i)
+        rescue IndexError
+          raise SetupError, "Please select from valid options (0...#{options.size - 1})" unless with_custom
+
+          user_option_prompt(**args.merge({ prompt_ref: 'custom', with_escape: true, ind: ind }))
+        end.compact
       end
 
-      def format_table_data(entries, headers_x: [], headers_y: [], axis: :x)
-        case axis
-        when :x
-          apply_table_headers(entries.dup, headers_x.dup, headers_y.dup)
-        when :y
-          apply_table_headers(entries.dup.transpose, headers_x.dup, headers_y.dup)
+      def user_option_prompt(allow_empty: false, with_escape: false, delimiter: nil, ind: 3, **args)
+        eg       = "(#{args.delete(:prompt_eg)})" if options.fetch(:prompt_eg, nil)
+        prompt   = [args.delete(:prompt_override) || ['Please enter a', args.delete(:prompt_ref), 'config option', eg]]
+        prompt  << "(enter \"#{ESCAPE_STRING}\" to cancel)" if allow_empty || with_escape
+        response = ask_(prompt.flatten.compact.join(' '), ind, **args)
+        return nil if with_escape && response == ESCAPE_STRING || response.empty?
+
+        delimiter ? response.split(delimiter).map(&:strip).reject(&:empty?) : response
+      end
+
+      def user_switch_prompt(prompt_ref: nil, prompt_override: nil, method: :yes_?, ind: 3, **args)
+        prompt = prompt_override || ['Enable ', prompt_ref, '?'].join
+        public_send(method.to_sym, prompt, ind, **args)
+      end
+
+      def prompt_additional_configs(ref:, selected_options: [], ind: 2, **args)
+        return false if args.fetch(:single, false)
+
+        say_("Selected #{ref} values:", ind, :leading_br)
+        if selected_options.empty?
+          say_('[none]', ind + 1, :parag)
+        else
+          headers    = args.fetch(:list_index, false) ? selected_options.each_index.to_a : []
+          table_args = { headers_y: headers, borders: true, dir_tree: args.fetch(:dir_tree, false) }
+          table_(entries: [selected_options], **table_args, indent: ind + 1)
         end
+        yes_?("Add more #{ref} options?", ind, :trailing_br)
       end
     end
   end

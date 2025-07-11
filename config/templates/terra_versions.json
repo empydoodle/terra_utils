@@ -1,0 +1,11 @@
+{
+  "terraform": {
+    "version": "1.12.1"
+  },
+  "opentofu": {
+    "version": "1.9.1"
+  },
+  "terragrunt": {
+    "version": "0.84.4"
+  }
+}

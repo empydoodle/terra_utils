@@ -5,14 +5,24 @@ module TerraUtils
   # Helper methods for configuration management
   module ConfigHelpers
 
-    def parse_config(config_file = nil)
-      parse_json_file(config_file || DEFAULT_CONFIG_FILE)
+    def parse_config(config_file = nil, symbol_keys: true)
+      parse_json_file(config_file || DEFAULT_CONFIG_FILE, symbols: symbol_keys)
     end
 
-    def fetch_config(key)
-      @config.fetch(key.to_sym)
+    def fetch_from_config(*path, config_obj: nil)
+      config = (config_obj || @config).dup
+      key    = nil
+      path.flatten.each do |e|
+        key    = e.to_sym
+        config = config.fetch(key)
+      end
+      config
     rescue KeyError => e
-      raise ConfigError, "Unable to fetch config from key '#{key.inspect}'. Error: #{e.message}"
+      raise ConfigError, "Unable to fetch config from key '#{key.inspect}' (from path #{path}): #{e.message}"
+    end
+
+    def fetch_config(*path)
+      fetch_from_config(*path)
     end
 
     def list_project_configurations
@@ -23,15 +33,15 @@ module TerraUtils
       list_project_configurations.include?(@project.to_sym)
     end
 
-    def fetch_project_config(project = nil)
+    def project_config(project = nil)
       project ||= current_project_configured? ? @project.to_sym : :global
-      fetch_config(:projects_settings).fetch(project)
+      fetch_config(:projects_settings, project)
     rescue KeyError, ConfigError => e
       raise ConfigError, "Unable to fetch project settings for project '#{project.inspect}'. Error: #{e.message}"
     end
 
     def global_project_config
-      fetch_project_config(:global)
+      fetch_config(:projects_settings, :global)
     rescue KeyError, ConfigError => e
       raise ConfigError, "Unable to fetch global project settings. Error: #{e.message}"
     end
@@ -40,21 +50,26 @@ module TerraUtils
       # Merge global project config with project-specific config if available
       return global_project_config unless current_project_configured?
 
-      global         = global_project_config
-      project_config = fetch_project_config
+      global  = global_project_config
+      project = project_config
       global.each_key.map do |config_key|
         if global[config_key].is_a?(Hash)
-          [config_key, global[config_key].merge(project_config.fetch(config_key, {}))]
+          [config_key, global[config_key].merge(project.fetch(config_key, {}))]
         else
-          [config_key, project_config.fetch(config_key, global[config_key])]
+          [config_key, project.fetch(config_key, global[config_key])]
         end
       end.to_h
     end
 
+    def fetch_project_config(*path)
+      @project_config ||= parse_project_config
+      fetch_from_config(*path, config_obj: @project_config)
+    rescue ConfigError => e
+      raise ConfigError, "Project (#{@project}) config lookup failed: #{e.message}"
+    end
+
     def project_features_config
-      parse_project_config.fetch(:features)
-    rescue KeyError => e
-      raise ConfigError, "Unable to fetch features from project config! Error: #{e.message}"
+      fetch_project_config(:features)
     end
 
     def list_enabled_features
@@ -68,9 +83,9 @@ module TerraUtils
     def validate_features
       # Enable configured features based on project config
       enabled = list_enabled_features
-      enable_aliases if enabled.include?(:command_aliases)
-      enable_backend_auto_auth if enabled.include?(:state_backend_auto_auth)
-      enable_env_auto_fill if enabled.include?(:environment_variable_auto_fill)
+      enabled.each do |feature|
+        public_send("enable_feature_#{feature}".to_sym)
+      end
     end
   end
 end

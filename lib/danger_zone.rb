@@ -5,8 +5,13 @@
 module DangerZone
   module_function # make following private instance variables but can DangerZone.log
 
-  def lib_name(truncate: true)
-    truncate ? self.class.name.split('::').first : self.class.name
+  def lib_name(truncate: 0)
+    name = self.class == Module ? self.name : self.class.name
+    truncate ? name.split('::')[truncate] : name
+  end
+
+  def debug_mode?
+    instance_variable_get(:@debug) || lib_name == 'DangerZone'
   end
 
   def log(msg, tag = nil, lib = nil)
@@ -31,6 +36,18 @@ module DangerZone
   end
 
   def log_debug(msg)
+    return nil unless debug_mode?
+
     log(msg, 'DEBUG', lib_name(truncate: false))
+  end
+
+  def silent_cmd(cmd, silence_stderr: true)
+    silence_stderr = false if debug_mode?
+    cmd = [
+      cmd,
+      ('2&>1' if silence_stderr),
+      '> /dev/null'
+    ].flatten.compact
+    system(cmd.join(' '))
   end
 end

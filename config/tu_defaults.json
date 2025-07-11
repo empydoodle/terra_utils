@@ -1,0 +1,13 @@
+{
+  "terra_cmd": null,
+  "upgrade_providers": false,
+  "exe_cmd": true,
+  "enforce_versions": true,
+  "state_backend_auto_auth": null,
+  "backend_auto_auth_cmd": null,
+  "config_path": null,
+  "environment_variable_auto_fill": null,
+  "env_auto_fill_config_path": null,
+  "addit_projects_dir": null,
+  "debug": false
+}

@@ -10,11 +10,10 @@ module TerraUtils
     class Base < TerraUtils::Base
       include TerragruntOMatic
 
-      attr_accessor :rm_cache, :use_local_tf
+      attr_accessor :rm_cache, :use_local_module
 
       def initialize(options, argv_array)
         super(options, argv_array)
-        switch_tg_version if @enforce_versions
         @terra_cmd = 'terragrunt'
       end
 
@@ -22,7 +21,7 @@ module TerraUtils
         [
           ('TG_LOG_LEVEL=debug' if @debug),
           super,
-          (tg_source_switch if @use_local_tf)
+          (tg_source_switch if @use_local_module)
         ].flatten.compact
       end
 

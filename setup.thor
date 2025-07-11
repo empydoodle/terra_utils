@@ -14,21 +14,21 @@ class Setup < Thor
   default_command :all
 
   def self.source_paths
-    [T_U_BIN_DIR, T_U_CONFIG_DIR, T_U_CONFIG_TEMPLATES_DIR]
+    [T_U_EXECUTABLES_DIR, T_U_CONFIG_DIR, T_U_CONFIG_TEMPLATES_DIR]
   end
 
   desc 'all', 'Setup terra_utils for use on your workstation.'
   method_option :config_dir, type: :string, desc: "Alternative directory for config (default: #{USER_T_U_CONFIG_DIR})"
-  method_option :exe_dir,    type: :string, desc: "Alternative directory for executable (default: #{EXECUTABLES_DIR})"
+  method_option :exe_dir,    type: :string, desc: "Alternative directory for executable (default: #{USER_EXECUTABLES_DIR})"
   def all
     intro_main
-    abort unless yes_?('Proceed with setup? (y/n)>', leading_br: true, trailing_br: true)
+    abort unless yes_?('Proceed with setup?', :parag)
 
     @config_dir  = options.fetch(:config_dir, USER_T_U_CONFIG_DIR)
-    @exe_dir     = options.fetch(:exe_dir, EXECUTABLES_DIR)
+    @exe_dir     = options.fetch(:exe_dir, USER_EXECUTABLES_DIR)
 
     setup_config(@config_dir)
-    say_('Setting up executables - sudo access is required', :yellow, leading_br: true)
+    say_('Setting up executables - sudo access is required', :yellow, :leading_br)
     system("(cd #{__dir__} ; sudo thor setup:executables #{@exe_dir})")
     say('Setup complete!', :green)
     config_files.each { |k, v| say("Please ensure API key for #{k} is populated correctly [#{v}]", :yellow) }
@@ -40,7 +40,7 @@ class Setup < Thor
     indent        = indent.to_i # nil => 0
     intro_config(indent)
     base_config(@config_dir, indent + 1)
-    # feature_config(@config_dir, indent + 1)
+    feature_config(@config_dir, indent + 1)
   end
 
   desc 'base_config', "Set up base terra_utils.json config file in specified directory (default: #{USER_T_U_CONFIG_DIR}) [used by :setup_config]"
@@ -53,12 +53,10 @@ class Setup < Thor
 
   desc 'feature_config', "Set up feature-specific config file(s) in specified directory (default: #{USER_T_U_CONFIG_DIR}) [used by :setup_config]"
   def feature_config(config_dir = nil, indent = nil)
-    @config_dir ||= config_dir || USER_T_U_CONFIG_DIR
-    indent        = indent.to_i # nil => 0
-    @features     = update_features_config_paths
+    @config_dir  ||= config_dir || USER_T_U_CONFIG_DIR
+    indent         = indent.to_i # nil => 0
     intro_feature_config(indent)
-
-    # Do stuff
+    setup_feature_config_files(ind: indent)
   end
 
   desc 'executables', 'Create symlinks for the executable files [used by :all]'
@@ -72,7 +70,7 @@ class Setup < Thor
   private
 
   def intro_main
-    intro('TERRA UTILS', :parag, margin: 42)
+    intro('TERRA UTILS', margin: 42)
     say_('Please ensure you have installed dependent system packages! (Brewfile / install_dependencies.sh)', :yellow)
     say_('Please ensure you have installed dependent Ruby gems via bundler!', :yellow)
   end
@@ -83,11 +81,15 @@ class Setup < Thor
   end
 
   def intro_base_config(indent = nil)
-    intro(['MAIN CONFIGURATION', 'This will set up the main configuration for TerraUtils.'], indent)
+    intro(['BASE CONFIGURATION', 'This will set up the main configuration for TerraUtils.'], indent)
   end
 
   def intro_feature_config(indent = nil)
-    intro(['FEATURE CONFIGURATION', 'This will set up the configurations for TerraUtils features.'], indent)
+    header_txt = [
+      'FEATURE CONFIGURATION',
+      'This will set up the configurations for TerraUtils features enabled in the base configuration.'
+    ]
+    intro(header_txt, indent)
     say_("Checking feature config files in #{@config_dir}...", indent)
   end
 
@@ -98,6 +100,16 @@ class Setup < Thor
 
   def intro(text, *style, **options)
     header_(text, *style, *INTRO_STYLE, **INTRO_OPTIONS, **options)
+  end
+
+  def verify_base_config(config_dir)
+    paths = [config_dir, TerraUtils::Setup::USER_T_U_CONFIG_DIR].map do |dir|
+      path = File.join(dir, 'terra_utils.json')
+      return path if File.exist?(path)
+
+      path
+    end
+    raise "Unable to locate base config file from expected paths: #{paths}"
   end
 
   def update_features_config_paths

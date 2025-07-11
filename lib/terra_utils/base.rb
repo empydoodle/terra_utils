@@ -9,7 +9,7 @@ module TerraUtils
     include TerraUtils
 
     attr_accessor :projects_dir, :project_config, :terra_cmd, :terra_subcmd,
-                  :debug, :exe_cmd, :config, :upgrade_providers, :enforce_version,
+                  :debug, :exe_cmd, :config, :upgrade_providers, :enforce_versions,
                   :state_backend_auto_auth, :backend_auto_auth_cmd,
                   :environment_variable_auto_fill, :env_auto_fill_config_path
     attr_reader   :options, :args, :projects_dirs, :addit_projects_dir, :path, :project, :scope
@@ -20,10 +20,10 @@ module TerraUtils
       set_config
       extract_scope
       validate_features
-      switch_tf_version if @enforce_versions
-      @args = argv_array.flat_map(&:split) # workaround passing args as single string, e.g. $ tg "plan -target x"
+      terra_version_enforce
+      @args         = argv_array.flat_map(&:split) # workaround passing args as single string, e.g. $ tg "plan -target x"
       @terra_subcmd = parse_subcmd_alias(@args.shift)
-      @terra_cmd    = 'terraform'
+      @terra_cmd  ||= determine_iac_framework
     end
 
     def generate_cmd
@@ -31,8 +31,8 @@ module TerraUtils
 
       [
         ('TF_LOG=debug' if @debug),
-        extract_tf_vars_from_env,
         collate_env_vars,
+        extract_tf_vars_from_env,
         @terra_cmd,
         @terra_subcmd,
         @args
@@ -59,20 +59,25 @@ module TerraUtils
     private
 
     def set_options
+      log_debug('Setting options...')
       @options.each { |k, v| instance_variable_set("@#{k}".to_sym, v) }
+      log_debug('... done')
     end
 
     def select_projects_dir
+      log_debug('  Selecting project parent dir...')
       projects_dir = @projects_dirs.reverse.find { |dir| Dir.pwd.start_with?(dir) }
       unless projects_dir
         err = "#{Dir.pwd} has no configured projects dir in config[:projects_dirs] (#{@projects_dirs}) - please add or use -P"
         raise ConfigError, err
       end
+      log_debug("  ... done (#{projects_dir})")
       projects_dir
     end
 
     def set_config
       set_options
+      log_debug('Setting config...')
       @config_path    ||= DEFAULT_CONFIG_FILE
       @config           = parse_config(@config_path)
       @projects_dirs    = fetch_config(:projects_dirs).push(@addit_projects_dir).compact
@@ -80,13 +85,15 @@ module TerraUtils
       @path_arr         = Dir.pwd.sub(@projects_dir, '').split('/')[1..]
       @project          = @path_arr.shift
       @project_config   = parse_project_config
+      log_debug('... done')
     end
 
     def extract_scope
       struct = @project_config.fetch(:directory_structure)
-      @scope = (0..struct.size - 1).to_a.map do |i|
+      scope = (0..struct.size - 1).to_a.map do |i|
         [struct[i], @path_arr[i]]
-      end.to_h
+      end
+      @scope = scope.unshift(['project', @project]).to_h
     end
 
     def skip_cmd?
@@ -96,14 +103,29 @@ module TerraUtils
       ].include?(true)
     end
 
-    def extract_tf_vars_from_env
-      ENV.select { |key, _| key.start_with?('TF_VAR') }.to_a.map { |env| env.join('=') }.join(' ')
-    end
-
     def parse_subcmd_alias(raw_subcmd)
       return raw_subcmd unless feature_enabled?('TerraAlias') && !skip_cmd?
 
       interpret_alias(raw_subcmd)
+    end
+
+    def determine_iac_framework
+      return @terra_cmd if @terra_cmd
+
+      @project_config.fetch(:iac_framework)
+    rescue KeyError
+      log_err('IAC framework is not set in your project config - please configure or set with -F')
+      abort
+    end
+
+    def extract_tf_vars_from_env
+      ENV.select { |key, _| key.start_with?('TF_VAR') }.to_a.map { |env| env.join('=') }.join(' ')
+    end
+
+    def terra_version_enforce
+      return false unless feature_enabled?('TerraVersions') && @enforce_versions
+
+      enforce_terra_versions
     end
 
     def collate_env_vars
