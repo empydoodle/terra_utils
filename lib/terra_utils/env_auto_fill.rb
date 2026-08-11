@@ -49,6 +49,8 @@ module TerraUtils
         cfg.fetch(:environment_variables).flat_map do |var|
           [var, fetch_value_config(**config)].join('=')
         end
+      rescue NoMethodError
+        log_debug("Unable to fetch environment variable config for entry (#{cfg.inspect}). Skipping...")
       end.join(' ')
     end
 
