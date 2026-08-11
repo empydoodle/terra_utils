@@ -17,7 +17,8 @@ module TerraUtils
       DEFAULT_OPTIONS = TerraUtils::ExeOptions::DEFAULT_OPTIONS.dup.merge(
         {
           use_local_module: false,
-          rm_cache: false
+          rm_cache: false,
+          log_format: nil
         }
       ).freeze
 
@@ -67,9 +68,27 @@ module TerraUtils
         }
       end
 
+      def log_format
+        @optparse.on(
+          '-L', '--log-format[=LOG_FORMAT]',
+          'Provide custom log format (or pass with no arg to use "%msg")'
+        ) do |lf|
+          @options[:log_format] = lf || '%msg'
+        end
+        @examples << {
+          desc: 'Show only basic log from Terragrunt plan',
+          usage: ['-L plan']
+        }
+        @examples << {
+          desc: 'Show runtime and dir with Terragrunt plan log',
+          usage: ['--log-format="%interval %prefix %msg"']
+        }
+      end
+
       def define_options
         use_local_module?
         delete_terragrunt_cache?
+        log_format
         super
       end
 

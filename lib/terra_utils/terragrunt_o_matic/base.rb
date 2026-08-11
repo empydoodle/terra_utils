@@ -10,7 +10,7 @@ module TerraUtils
     class Base < TerraUtils::Base
       include TerragruntOMatic
 
-      attr_accessor :rm_cache, :use_local_module
+      attr_accessor :rm_cache, :use_local_module, :log_format
 
       def initialize(options, argv_array)
         super(options, argv_array)
@@ -19,9 +19,14 @@ module TerraUtils
 
       def generate_cmd
         [
+          # module cache
+          'TG_PROVIDER_CACHE=1',
+          'TG_PROVIDER_CACHE_DIR=$HOME/.terraform.d/plgun-cache',
+          # debugging
           ('TG_LOG_LEVEL=debug' if @debug),
           super,
-          (tg_source_switch if @use_local_module)
+          (tg_source_switch if @use_local_module),
+          (tg_log_format(@log_format) if @log_format)
         ].flatten.compact
       end
 

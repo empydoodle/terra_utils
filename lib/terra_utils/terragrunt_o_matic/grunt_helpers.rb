@@ -33,7 +33,8 @@ module TerraUtils
     end
 
     def local_tg_source_path
-      hcl = File.read(File.join(Dir.pwd, 'terragrunt.hcl'))
+      #hcl = File.read(File.join(Dir.pwd, 'terragrunt.hcl'))
+      hcl = `terragrunt render`
       src = hcl.each_line.find { |l| l.include?('source =') }.strip
 
       src_path_arr = sanitise_tg_source(src)
@@ -48,17 +49,21 @@ module TerraUtils
       ].join(' ')
     end
 
-    def generate_init_upgrade_cmd(use_local_module: false, local_projects_dirs: [])
+    def tg_log_format(log_format_str)
+      "--log-custom-format \"#{log_format_str}\""
+    end
+
+    def generate_init_upgrade_cmd(use_local_module: false)
       [
         'init -upgrade',
-        (tg_source_switch(local_projects_dirs) if use_local_module)
+        (tg_source_switch if use_local_module)
       ].compact.join(' ')
     end
 
     def upgrade_providers_and_lock
       [
         @terra_cmd,
-        generate_init_upgrade_cmd(use_local_module: @use_local_module, local_projects_dirs: @projects_dirs),
+        generate_init_upgrade_cmd(use_local_module: @use_local_module),
         '&&',
         @terra_cmd,
         generate_providers_lock_cmd
