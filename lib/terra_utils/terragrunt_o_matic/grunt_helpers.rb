@@ -44,7 +44,7 @@ module TerraUtils
 
     def tg_source_switch
       [
-        '--terragrunt-source',
+        '--source',
         local_tg_source_path
       ].join(' ')
     end

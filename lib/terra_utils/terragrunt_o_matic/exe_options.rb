@@ -18,7 +18,7 @@ module TerraUtils
         {
           use_local_module: false,
           rm_cache: false,
-          log_format: nil
+          log_format: "%msg"
         }
       ).freeze
 
@@ -71,16 +71,16 @@ module TerraUtils
       def log_format
         @optparse.on(
           '-L', '--log-format[=LOG_FORMAT]',
-          'Provide custom log format (or pass with no arg to use "%msg")'
+          'Provide custom log format (or pass with no arg to use unstripped Terragrunt default).'
         ) do |lf|
-          @options[:log_format] = lf || '%msg'
+          @options[:log_format] = lf
         end
         @examples << {
-          desc: 'Show only basic log from Terragrunt plan',
+          desc: 'Show only Terragrunt output with default log format',
           usage: ['-L plan']
         }
         @examples << {
-          desc: 'Show runtime and dir with Terragrunt plan log',
+          desc: 'Show runtime and directory with Terragrunt plan log',
           usage: ['--log-format="%interval %prefix %msg"']
         }
       end
