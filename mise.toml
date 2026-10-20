@@ -1,0 +1,10 @@
+[tools]
+1password-cli = "latest"
+fnox = { version = "latest", workflow = "release.yml" }
+ruby = "3.2.2"
+sops = "latest"
+terraform = "latest"
+terraform-docs = "latest"
+terragrunt = "latest"
+tflint = "latest"
+tfsec = "latest"

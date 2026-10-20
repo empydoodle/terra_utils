@@ -1,25 +1,43 @@
 #!/bin/bash
 
 # Install required dependencies on a Debian-based Linux system.
-if [[ "$(which apt)" == "apt not found" ]]; then
-  echo "[TERRAUTILS] Please install the following dependencies for your platform:"
-  echo "               * rbenv    (https://github.com/rbenv/rbenv#installation)"
-  echo "               * tfswitch (https://github.com/warrensbox/terraform-switcher)"
-  echo "               * tgswitch (https://github.com/warrensbox/tgswitch)"
-else
-  echo "[TERRAUTILS] Updating package list & installing base dependencies..."
-  sudo apt-get update && sudo apt-get install -y rbenv tfswitch tgswitch
+if [[ "$(which mise)" == "mise not found" ]]; then
+  echo "[TERRAUTILS] Installing mise for package management..."
+  # install from https://github.com/mise/mise
+  curl -sSL https://mise.run | sh
+  export PATH="~/.local/bin:$PATH"
+  eval "$(mise activate bash)"
+  echo "[TERRAUTILS] ... done!"
+
+  echo "[TERRAUTILS] Activating mise..."
+  # Bash
+  cat <<EOF >> ${HOME}/.bashrc
+
+# Added by terra_utils at $(date)
+eval "$(~/.local/bin/mise activate bash)"
+EOF
+  # Zsh
+  cat <<EOF >> ${HOME}/.zshrc
+
+# Added by terra_utils at $(date)
+eval "$(~/.local/bin/mise activate zsh)"
+EOF
+  # Fish
+  cat <<EOF >> ${HOME}/.config/fish/config.fish
+
+# Added by terra_utils at $(date)
+eval "$(~/.local/bin/mise activate fish)"
+EOF
   echo "[TERRAUTILS] ... done!"
 fi
 
 echo ""
+echo "[TERRAUTILS] Installing packages with mise..."
+~/.local/bin/mise install
+echo "[TERRAUTILS] ... done!"
 
-# Check 1Password requirements
-if [[ "$(which op)" == "op not found" ]]; then
-  echo "[TERRAUTILS] If you wish to fetch secrets using 1Password, please install 1password-cli and its dependencies:"
-  echo "               https://developer.1password.com/docs/cli/get-started/#step-1-install-1password-cli"
-  echo ""
-fi
+echo ""
+echo "[TERRAUTILS] Checking 1Password requirements..."
 
 # Complete setup
 echo "[TERRAUTILS] Please install reqired Ruby version via rbenv, install the required Ruby gems and run setup:"

@@ -26,10 +26,6 @@ $ tg --help
 
 # Installation
 
-## Basic Dependencies
-
-### Debian-based Linux
-
 1. Install dependencies:
 
 ```
@@ -37,51 +33,14 @@ $ cd /path/to/terra_utils
 $ ./install_dependencies.sh
 ```
 
-### MacOS
-
-1. Install [Homebrew](https://brew.sh/).
-2. Install all necessary system packages via `Brewfile`:
-
-```
-$ cd /path/to/terra_utils
-$ brew bundle
-```
-
-### Other Linux
-
-1. Install dependencies with preferred package manager:
-  * `rbenv`
-  * `tfswitch`
-  * `tgswitch`
-  * `tflint`
-  * `tfsec`
-  * `terraform-docs`
-  * `pre-commit`
-
-### Ruby Dependencies
-
-2. Install correct Ruby version (via `.ruby-version`):
-
-```
-$ cd /path/to/terra_utils
-$ rbenv install
-```
-
-3. Install dependency gems:
+2. Install dependent Ruby gems:
 
 ```
 $ cd /path/to/terra_utils
 $ bundle install
 ```
 
-### Optional Dependencies
-
-* https://1password.com/downloads
-* https://developer.1password.com/docs/cli/get-started/
-
-### Install TerraUtils
-
-4. Run the setup utility to setup config / executable files:
+3. Run the setup utility to setup config / executable files:
 
 ```
 $ thor setup
