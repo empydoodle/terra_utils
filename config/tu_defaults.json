@@ -3,6 +3,7 @@
   "upgrade_providers": false,
   "exe_cmd": true,
   "enforce_versions": true,
+  "auto_approve": false,
   "state_backend_auto_auth": null,
   "backend_auto_auth_cmd": null,
   "config_path": null,

@@ -62,6 +62,19 @@ module TerraUtils
       }
     end
 
+    def auto_approve?
+      @optparse.on(
+        '-y', '--auto-approve',
+        'Send "-auto-approve" to action (if compatible).'
+      ) do
+        @options[:auto_approve] = true
+      end
+      @examples << {
+        desc: 'Apply a change without an approval prompt',
+        usage: ['-y a']
+      }
+    end
+
     def state_backend_auth_parameters
       @optparse.on(
         '-A', '--[no-]state-auth[-command="COMMAND"]',

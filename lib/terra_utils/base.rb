@@ -10,7 +10,7 @@ module TerraUtils
 
     attr_accessor :projects_dir, :project_config, :terra_cmd, :terra_subcmd,
                   :debug, :exe_cmd, :config, :upgrade_providers, :enforce_versions,
-                  :state_backend_auto_auth, :backend_auto_auth_cmd,
+                  :auto_approve, :state_backend_auto_auth, :backend_auto_auth_cmd,
                   :environment_variable_auto_fill, :env_auto_fill_config_path
     attr_reader   :options, :args, :projects_dirs, :addit_projects_dir, :path, :project, :scope
 
@@ -35,6 +35,7 @@ module TerraUtils
         extract_tf_vars_from_env,
         @terra_cmd,
         @terra_subcmd,
+        auto_approve?,
         @args
       ].flatten.compact
     end
@@ -132,6 +133,12 @@ module TerraUtils
       return nil unless feature_enabled?('EnvAutoFill') && auto_fill_env?
 
       generate_env_vars
+    end
+
+    def auto_approve?
+      return nil unless @auto_approve
+
+      '--auto-approve' if %w[apply destroy].include?(@terra_subcmd)
     end
 
     def authenticate_state_backend

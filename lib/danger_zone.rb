@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-## Log methods as made famous by Kenny Loggins
+# Log methods as made famous by Kenny Loggins
 module DangerZone
   module_function # make following private instance variables but can DangerZone.log
 
