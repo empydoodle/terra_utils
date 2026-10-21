@@ -191,6 +191,7 @@ module TerraUtils
       set_alternative_config
       print_command_only?
       upgrade_provider_versions?
+      auto_approve?
       state_backend_auth_parameters
       env_auto_fill_parameters
       iac_framework
